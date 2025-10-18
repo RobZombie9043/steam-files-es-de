@@ -1,0 +1,54 @@
+name: Update Steam Files
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs daily at midnight UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update_steam:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Steam update script
+        run: |
+          set -e
+          python update_steam_files.py
+          echo "Current directory: $(pwd)"
+          if [ -d steam ]; then
+            echo "Contents of steam/ folder:"
+            ls -l steam/
+          else
+            echo "steam folder not found"
+          fi
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
+
+      - name: Commit and push changes
+        run: |
+          set -e
+          git add steam/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "🔄 Auto-update Steam files ($(date -u '+%Y-%m-%d %H:%M:%S UTC'))"
+            git push origin HEAD:${{ github.ref_name }}
+          fi

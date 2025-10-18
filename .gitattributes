@@ -1,0 +1,8 @@
+# Force LF line endings for all text files
+* text=auto eol=lf
+
+# Explicitly enforce LF for YAML and Python files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
